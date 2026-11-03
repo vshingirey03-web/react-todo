@@ -1,17 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+
+const API = "http://localhost:3000/tasks";
 
 function App() {
   const [tasks, setTasks] = useState([]);
   const [text, setText] = useState("");
 
-  function addTask() {
-    if (text === "") return;
-    setTasks([...tasks, text]);
-    setText("");
+  async function loadTasks() {
+    const response = await fetch(API);
+    const data = await response.json();
+    setTasks(data);
   }
 
-  function removeTask(index) {
-    setTasks(tasks.filter((task, i) => i !== index));
+  useEffect(() => {
+    loadTasks();
+  }, []);
+
+  async function addTask() {
+    if (text === "") return;
+    await fetch(API, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text: text }),
+    });
+    setText("");
+    loadTasks();
+  }
+
+  async function removeTask(id) {
+    await fetch(API + "/" + id, { method: "DELETE" });
+    loadTasks();
   }
 
   return (
@@ -33,13 +51,10 @@ function App() {
       </div>
 
       <ul className="mt-4">
-        {tasks.map((task, index) => (
-          <li
-            key={index}
-            className="flex justify-between py-2 border-b"
-          >
-            {task}
-            <button onClick={() => removeTask(index)}>✕</button>
+        {tasks.map((task) => (
+          <li key={task.id} className="flex justify-between py-2 border-b">
+            {task.text}
+            <button onClick={() => removeTask(task.id)}>✕</button>
           </li>
         ))}
       </ul>
