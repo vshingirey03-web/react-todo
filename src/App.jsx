@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 
-const API = "http://localhost:3000";
+// Адрес сервера берётся из настройки VITE_API_URL (на хостинге), локально — localhost
+const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 function App() {
   // Токен хранится в браузере, поэтому вход сохраняется после обновления страницы
