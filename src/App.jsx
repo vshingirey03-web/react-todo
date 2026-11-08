@@ -3,12 +3,25 @@ import { useState, useEffect } from "react";
 // Адрес сервера берётся из настройки VITE_API_URL (на хостинге), локально — localhost
 const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+// Общая «страница»: надпись «Мои дела» по центру и карточка по центру экрана
+function Page({ children, topRight }) {
+  return (
+    <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8">
+      {/* Правый верхний угол экрана: имя пользователя и кнопка «Выйти» */}
+      {topRight && <div className="absolute top-4 right-4 flex items-center gap-3">{topRight}</div>}
+      <h1 className="text-4xl font-bold text-gray-900 mb-6">Мои дела</h1>
+      {children}
+    </div>
+  );
+}
+
 function App() {
   // Токен хранится в браузере, поэтому вход сохраняется после обновления страницы
   const [token, setToken] = useState(localStorage.getItem("token") || "");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [authError, setAuthError] = useState("");
+  const [me, setMe] = useState(""); // имя вошедшего пользователя
 
   const [tasks, setTasks] = useState([]);
   const [text, setText] = useState("");
@@ -62,6 +75,7 @@ function App() {
     localStorage.removeItem("token");
     setToken("");
     setTasks([]);
+    setMe("");
   }
 
   async function loadTasks() {
@@ -70,8 +84,18 @@ function App() {
     setTasks(await response.json());
   }
 
+  async function loadMe() {
+    const response = await request("/me");
+    if (!response || !response.ok) return;
+    const data = await response.json();
+    setMe(data.username);
+  }
+
   useEffect(() => {
-    if (token) loadTasks();
+    if (token) {
+      loadTasks();
+      loadMe();
+    }
   }, [token]);
 
   // Общая отправка изменения; ошибку сервера показываем на экране
@@ -249,8 +273,9 @@ function App() {
   // ---------- Экран входа ----------
   if (!token) {
     return (
-      <div className="max-w-sm mx-auto mt-10 p-6 bg-white rounded-xl shadow">
-        <h1 className="text-2xl font-bold text-center mb-4">Вход</h1>
+      <Page>
+      <div className="w-full max-w-sm p-6 bg-white rounded-xl shadow">
+        <h2 className="text-2xl font-bold text-center mb-4">Вход</h2>
         <input
           className="w-full border rounded-lg px-3 py-2 mb-2"
           placeholder="Имя пользователя"
@@ -280,20 +305,31 @@ function App() {
           </button>
         </div>
       </div>
+      </Page>
     );
   }
 
   // ---------- Список задач ----------
   return (
-    <div className="max-w-lg mx-auto mt-10 p-6 bg-white rounded-xl shadow">
+    <Page
+      topRight={
+        <>
+          <span className="font-medium text-gray-900">{me}</span>
+          <button
+            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-800"
+            onClick={logout}
+          >
+            Выйти
+          </button>
+        </>
+      }
+    >
+    <div className="w-full max-w-lg p-6 bg-white rounded-xl shadow">
       {/* Прозрачная подложка: клик мимо меню закрывает его */}
       {menuId !== null && <div className="fixed inset-0 z-10" onClick={() => setMenuId(null)} />}
 
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Список дел</h1>
-        <button className="text-sm text-gray-500 hover:text-red-600" onClick={logout}>
-          Выйти
-        </button>
+      <div className="mb-4">
+        <h2 className="text-2xl font-bold">Список дел</h2>
       </div>
 
       <div className="flex gap-2">
@@ -319,6 +355,7 @@ function App() {
         {topTasks.map((task, i) => renderItem(task, String(i + 1), false))}
       </ul>
     </div>
+    </Page>
   );
 }
 

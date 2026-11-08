@@ -1,1 +1,11 @@
 @import "tailwindcss";
+
+/* Фон: бирюзовый, с косыми фигурами (углы экрана) */
+body {
+  min-height: 100vh;
+  background-color: #d3e5e9;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080' preserveAspectRatio='none'%3E%3Cpolygon points='1360,45 1920,45 1920,265' fill='%23c2d9df'/%3E%3Cpolygon points='0,660 1920,840 1920,1080 0,1080' fill='%23c2d9df'/%3E%3C/svg%3E");
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
